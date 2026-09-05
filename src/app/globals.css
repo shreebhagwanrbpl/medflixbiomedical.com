@@ -1,0 +1,245 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #0b6e69;
+  --secondary: #0e938b;
+  --text: #133835;
+  --muted: #496a66;
+  --bg: #f6fbfa;
+  --white: #ffffff;
+  --border: #cdeae5;
+  --vp: #0b6e69;
+  --va: #0e938b;
+  --vs: #e6f4f2;
+  --vb: #f6fbfa;
+  --vt: #133835;
+  --vm: #496a66;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* CONTAINER FIX */
+.container-custom {
+  width: 100%;
+  max-width: 1320px;
+  margin-inline: auto;
+  padding-inline: 24px;
+}
+
+/* SECTION SPACING FIX */
+.section-padding {
+  padding: 100px 0;
+}
+
+/* PREMIUM BACKGROUND */
+.gradient-bg {
+  background:
+    radial-gradient(circle at top left,
+      rgba(11, 110, 105, 0.08),
+      transparent 30%),
+    radial-gradient(circle at top right,
+      rgba(14, 147, 139, 0.08),
+      transparent 30%),
+    #f6fbfa;
+}
+
+/* GLASS EFFECT */
+.glass-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(205, 234, 229, 0.6);
+  box-shadow: 0 20px 50px rgba(11, 110, 105, .06);
+}
+
+/* BUTTONS */
+.primary-btn {
+  background: var(--primary);
+  color: white;
+  padding: 15px 28px;
+  border-radius: 16px;
+  font-weight: 600;
+  transition: all .3s ease;
+  white-space: nowrap;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  background: #08544e;
+  box-shadow: 0 8px 25px rgba(11, 110, 105, 0.25);
+}
+
+.secondary-btn {
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text);
+  padding: 15px 28px;
+  border-radius: 16px;
+  font-weight: 600;
+  transition: all .3s ease;
+  white-space: nowrap;
+}
+
+.secondary-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 8px 25px rgba(11, 110, 105, .08);
+}
+
+/* TITLES */
+.section-title {
+  font-size: clamp(36px, 5vw, 58px);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  color: var(--text);
+}
+
+.section-subtitle {
+  color: var(--muted);
+  margin-top: 18px;
+  max-width: 700px;
+  line-height: 1.9;
+  font-size: 17px;
+}
+
+/* SHADOW */
+.card-shadow {
+  box-shadow:
+    0 10px 30px rgba(11, 110, 105, .04),
+    0 20px 60px rgba(11, 110, 105, .05);
+}
+
+/* CARD HEIGHT ALIGNMENT */
+.equal-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* NAVBAR FIX */
+header {
+  width: 100%;
+}
+
+/* CTA OVERFLOW FIX */
+.cta-grid {
+  display: grid;
+  grid-template-columns: 1.4fr .9fr;
+  gap: 40px;
+  align-items: center;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+  .container-custom {
+    max-width: 1140px;
+  }
+}
+
+@media (max-width: 992px) {
+  .section-padding {
+    padding: 80px 0;
+  }
+
+  .cta-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .container-custom {
+    padding-inline: 20px;
+  }
+
+  .section-padding {
+    padding: 70px 0;
+  }
+
+  .section-subtitle {
+    font-size: 15px;
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .container-custom {
+    padding-inline: 16px;
+  }
+
+  .section-padding {
+    padding: 60px 0;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.8),
+      transparent);
+  animation: shimmer 1.8s infinite;
+}
+
+/* AURORA CLINICAL PALETTE */
+body.variant-01 {
+  background: var(--bg);
+  color: var(--text);
+}
+body.variant-01 header {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: #cdeae5 !important;
+}
+body.variant-01 main {
+  background: var(--bg);
+}
