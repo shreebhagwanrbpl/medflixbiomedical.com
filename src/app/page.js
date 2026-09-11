@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { motion } from "framer-motion";
 import {
@@ -117,8 +117,8 @@ const testimonials = [
 export default function Home({ city }) {
   const [services, setServices] = useState(fallbackServices);
   const [products, setProducts] = useState(fallbackProducts);
-  const [activeCategory, setActiveCategory] = useState("All");
   const [homeData, setHomeData] = useState(null);
+  const [homeLoading, setHomeLoading] = useState(true);
   const [contactInfo, setContactInfo] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -140,35 +140,42 @@ export default function Home({ city }) {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    // 1. Real-time listener for home page hero & carousel configuration
+    const unsubHome = onSnapshot(
+      doc(db, "websites", "medflixbiomedicalcom", "pages", "home"),
+      (snap) => {
+        if (snap.exists()) {
+          setHomeData(snap.data());
+        } else {
+          setHomeData({});
+        }
+        setHomeLoading(false);
+      },
+      (err) => {
+        console.error("Error subscribing to home data:", err);
+        setHomeLoading(false);
+      }
+    );
+
+    // 2. Real-time listener for contact information
+    const unsubContact = onSnapshot(
+      doc(db, "websites", "medflixbiomedicalcom", "pages", "contact"),
+      (snap) => {
+        if (snap.exists()) {
+          setContactInfo(snap.data().contactInfo || []);
+        }
+      },
+      (err) => {
+        console.error("Error subscribing to contact data:", err);
+      }
+    );
+
+    // 3. Fetch services and products
+    const fetchOtherData = async () => {
       try {
-        // Fetch home page configuration (title, description, buttons, carousel media)
-        try {
-          const homeSnap = await getDoc(
-            doc(db, "websites", "clinidixcom", "pages", "home")
-          );
-          if (homeSnap.exists()) {
-            setHomeData(homeSnap.data());
-          }
-        } catch (homeErr) {
-          console.error("Error fetching home data:", homeErr);
-        }
-
-        // Fetch contact information for dynamic helpline info
-        try {
-          const contactSnap = await getDoc(
-            doc(db, "websites", "clinidixcom", "pages", "contact")
-          );
-          if (contactSnap.exists()) {
-            setContactInfo(contactSnap.data().contactInfo || []);
-          }
-        } catch (contactErr) {
-          console.error("Error fetching contact data:", contactErr);
-        }
-
         // Fetch services from Firebase if available
         const serviceSnap = await getDoc(
-          doc(db, "websites", "clinidixcom", "pages", "services")
+          doc(db, "websites", "medflixbiomedicalcom", "pages", "services")
         );
         if (serviceSnap.exists() && serviceSnap.data().services?.length > 0) {
           const dbServices = serviceSnap.data().services.map((s, idx) => ({
@@ -191,15 +198,15 @@ export default function Home({ city }) {
       }
     };
 
-    fetchData();
+    fetchOtherData();
+
+    return () => {
+      unsubHome();
+      unsubContact();
+    };
   }, []);
 
-  const categories = ["All", ...Array.from(new Set(products.map((p) => p.category)))];
-
-  const filteredProducts =
-    activeCategory === "All"
-      ? products.slice(0, 6)
-      : products.filter((p) => p.category === activeCategory).slice(0, 6);
+  const featuredProducts = products.slice(0, 3);
 
   const serviceIcons = [
     <Microscope size={28} key={1} />,
@@ -241,6 +248,7 @@ export default function Home({ city }) {
       {/* ================= DYNAMIC HERO BANNER & CAROUSEL ================= */}
       <HeroCarousel
         homeData={homeData}
+        loading={homeLoading}
         locationTitle={locationTitle}
         makeLink={makeLink}
       />
@@ -336,25 +344,9 @@ export default function Home({ city }) {
             </Link>
           </div>
 
-          {/* Category Tabs */}
-          <div className="mt-10 flex flex-wrap items-center gap-3 border-b border-[#cdeae5]/60 pb-4">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold transition-all ${activeCategory === cat
-                  ? "bg-[#0b6e69] text-white shadow-md shadow-[#0b6e69]/20"
-                  : "bg-[#e6f4f2] border border-[#cdeae5] text-[#496a66] hover:bg-[#d8f0ec]"
-                  }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {/* Product Grid */}
-          <div className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {filteredProducts.map((prod) => (
+          {/* Product Grid - Top 3 Products */}
+          <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {featuredProducts.map((prod) => (
               <ProductCard key={prod.id} product={prod} makeLink={makeLink} />
             ))}
           </div>

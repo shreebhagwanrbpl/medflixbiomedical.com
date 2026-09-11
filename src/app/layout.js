@@ -6,7 +6,7 @@ import { Toaster } from "react-hot-toast";
 
 export const metadata = {
   metadataBase: new URL(
-    "https://clinidix.com"
+    "https://medflixbiomedical.com"
   ),
 
   title:
@@ -35,7 +35,7 @@ export const metadata = {
     description:
       "Precision biomedical and diagnostic laboratory equipment supplier across India.",
 
-    url: "https://clinidix.com",
+    url: "https://medflixbiomedical.com",
 
     siteName: "Raj Biosis Private Limited",
 
@@ -71,7 +71,7 @@ export const metadata = {
   },
 
   alternates: {
-    canonical: "https://clinidix.com",
+    canonical: "https://medflixbiomedical.com",
   },
 };
 

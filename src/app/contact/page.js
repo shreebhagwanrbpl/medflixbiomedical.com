@@ -58,7 +58,7 @@ export default function ContactPage() {
     const loadContact = async () => {
       try {
         const snap = await getDoc(
-          doc(db, "websites", "clinidixcom", "pages", "contact")
+          doc(db, "websites", "medflixbiomedicalcom", "pages", "contact")
         );
         if (snap.exists()) {
           setContactInfo(snap.data().contactInfo || []);
@@ -78,7 +78,7 @@ export default function ContactPage() {
       if (!currentDistrict) return;
       try {
         const snap = await getDoc(
-          doc(db, "websites", "clinidixcom", "districts", currentDistrict)
+          doc(db, "websites", "medflixbiomedicalcom", "districts", currentDistrict)
         );
         if (snap.exists()) {
           setDistrictData(snap.data());
@@ -287,9 +287,8 @@ export default function ContactPage() {
                     <span className="text-base sm:text-lg pr-4">{faq.q}</span>
                     <ChevronDown
                       size={20}
-                      className={`shrink-0 text-[#0b6e69] transition-transform duration-300 ${
-                        isOpen ? "rotate-180" : ""
-                      }`}
+                      className={`shrink-0 text-[#0b6e69] transition-transform duration-300 ${isOpen ? "rotate-180" : ""
+                        }`}
                     />
                   </button>
 

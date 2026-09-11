@@ -52,7 +52,7 @@ export default function Footer() {
         // 1. Fetch Contact Info
         try {
           const snap = await getDoc(
-            doc(db, "websites", "clinidixcom", "pages", "contact")
+            doc(db, "websites", "medflixbiomedicalcom", "pages", "contact")
           );
           if (isMounted && snap.exists()) {
             setContactInfo(snap.data().contactInfo || []);
@@ -94,7 +94,7 @@ export default function Footer() {
 
       try {
         const snap = await getDoc(
-          doc(db, "websites", "clinidixcom", "districts", district)
+          doc(db, "websites", "medflixbiomedicalcom", "districts", district)
         );
 
         if (snap.exists()) {
@@ -132,9 +132,9 @@ export default function Footer() {
   });
   const emails = emailItem
     ? (Array.isArray(emailItem.value)
-        ? emailItem.value
-        : [emailItem.value]
-      ).filter((v) => typeof v === "string" && v.trim() !== "")
+      ? emailItem.value
+      : [emailItem.value]
+    ).filter((v) => typeof v === "string" && v.trim() !== "")
     : [];
 
   // Extract address flexibly
@@ -151,8 +151,8 @@ export default function Footer() {
     ? Array.isArray(addressItem.value)
       ? addressItem.value.filter(Boolean).join(", ")
       : typeof addressItem.value === "string"
-      ? addressItem.value.trim()
-      : ""
+        ? addressItem.value.trim()
+        : ""
     : "";
 
   const dynamicAddress = districtData
@@ -211,6 +211,7 @@ export default function Footer() {
                   src="/logo.png"
                   alt="Raj Biosis Private Limited"
                   fill
+                  sizes="(max-width: 768px) 208px, 220px"
                   className="object-contain object-left"
                 />
               </Link>

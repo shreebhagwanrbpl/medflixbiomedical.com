@@ -83,8 +83,8 @@ export default function ServicesPage() {
     const fetchServicesAndContact = async () => {
       try {
         const [servicesSnap, contactSnap] = await Promise.all([
-          getDoc(doc(db, "websites", "clinidixcom", "pages", "services")),
-          getDoc(doc(db, "websites", "clinidixcom", "pages", "contact")),
+          getDoc(doc(db, "websites", "medflixbiomedicalcom", "pages", "services")),
+          getDoc(doc(db, "websites", "medflixbiomedicalcom", "pages", "contact")),
         ]);
 
         if (servicesSnap.exists() && servicesSnap.data().services?.length > 0) {

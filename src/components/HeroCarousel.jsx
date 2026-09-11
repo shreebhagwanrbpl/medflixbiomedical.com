@@ -16,33 +16,9 @@ import {
   Film,
 } from "lucide-react";
 
-// Default high-quality fallback slides if database has no media configured yet
-const FALLBACK_SLIDES = [
-  {
-    type: "image",
-    url: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1900&q=80",
-    title: "Precision Medical Equipment & Diagnostic Solutions",
-    subtitle:
-      "Equipping hospitals, pathology centers, and clinical laboratories with top-tier automated analyzers, NABL-traceable calibration, and 24/7 rapid technical engineering support across India.",
-  },
-  {
-    type: "image",
-    url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1900&q=80",
-    title: "Automated Clinical Chemistry & Pathology Analyzers",
-    subtitle:
-      "High-throughput diagnostic instruments delivering rapid test results with uncompromised quality control and ISO 13485 certified accuracy standards.",
-  },
-  {
-    type: "image",
-    url: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=1900&q=80",
-    title: "24/7 Biomedical Engineering & AMC Support",
-    subtitle:
-      "Guaranteed 2-hour emergency repair SLA for critical ICU, OT, and pathology laboratory equipment with genuine OEM parts.",
-  },
-];
-
 export default function HeroCarousel({
   homeData = null,
+  loading = false,
   locationTitle = "",
   makeLink = (path) => path,
 }) {
@@ -57,7 +33,7 @@ export default function HeroCarousel({
     if (!data) return [];
     const list = [];
 
-    // 1. Check media array (preferred)
+    // 1. Check media array (preferred - contains ordered mixed images & videos from admin)
     if (Array.isArray(data.media) && data.media.length > 0) {
       data.media.forEach((item, idx) => {
         const url = typeof item === "string" ? item : item?.url;
@@ -66,16 +42,17 @@ export default function HeroCarousel({
           (url?.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i) ? "video" : "image");
         if (url) {
           list.push({
-            id: `media-${idx}`,
+            id: item?.id || `media-${idx}`,
             type,
             url,
           });
         }
       });
+      if (list.length > 0) return list;
     }
 
     // 2. Check images array
-    if (list.length === 0 && Array.isArray(data.images) && data.images.length > 0) {
+    if (Array.isArray(data.images) && data.images.length > 0) {
       data.images.forEach((url, idx) => {
         if (url) {
           list.push({
@@ -85,10 +62,7 @@ export default function HeroCarousel({
           });
         }
       });
-    }
-
-    // 3. Check single imageUrl / image
-    if (list.length === 0 && (data.imageUrl || data.image)) {
+    } else if (data.imageUrl || data.image) {
       const singleImg = data.imageUrl || data.image;
       if (singleImg) {
         list.push({
@@ -99,7 +73,7 @@ export default function HeroCarousel({
       }
     }
 
-    // 4. Check videos array
+    // 3. Check videos array
     if (Array.isArray(data.videos) && data.videos.length > 0) {
       data.videos.forEach((vUrl, idx) => {
         if (vUrl && !list.some((item) => item.url === vUrl)) {
@@ -110,10 +84,7 @@ export default function HeroCarousel({
           });
         }
       });
-    }
-
-    // 5. Check single videoUrl
-    if (data.videoUrl && !list.some((item) => item.url === data.videoUrl)) {
+    } else if (data.videoUrl && !list.some((item) => item.url === data.videoUrl)) {
       list.push({
         id: "single-vid",
         type: "video",
@@ -124,37 +95,18 @@ export default function HeroCarousel({
     return list;
   };
 
-  const dbSlides = parseMediaList(homeData);
-  const slides = dbSlides.length > 0 ? dbSlides : FALLBACK_SLIDES;
+  const slides = parseMediaList(homeData);
 
-  // Dynamic texts with fallbacks
-  const heroTitle =
-    homeData?.title?.trim() ||
-    (locationTitle
-      ? `Precision Medical Equipment & Diagnostic Solutions in ${locationTitle}`
-      : "Precision Medical Equipment & Diagnostic Solutions");
-
-  const heroDescription =
-    homeData?.description?.trim() ||
-    "Equipping hospitals, pathology centers, and clinical laboratories with top-tier automated analyzers, NABL-traceable calibration, and 24/7 rapid technical engineering support across India.";
-
-  const btn1Text = homeData?.button1Text?.trim() || "Explore Product Catalog";
-  const btn2Text = homeData?.button2Text?.trim() || "Request Official Quote";
-
-  // Static routes for buttons
-  const btn1Href = makeLink("/items");
-  const btn2Href = makeLink("/contact");
-
-  // Auto-slide effect
+  // Auto-slide effect - All hooks placed at the top level unconditionally
   useEffect(() => {
-    if (!isPlaying || slides.length <= 1) return;
+    if (loading || homeData === null || !isPlaying || slides.length <= 1) return;
 
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5500);
 
     return () => clearInterval(timer);
-  }, [isPlaying, slides.length, currentSlide]);
+  }, [loading, homeData, isPlaying, slides.length, currentSlide]);
 
   // Adjust active slide index safely if slides array length changes
   useEffect(() => {
@@ -165,6 +117,7 @@ export default function HeroCarousel({
 
   // Play video on current slide
   useEffect(() => {
+    if (loading || homeData === null) return;
     const currentMedia = slides[currentSlide];
     if (currentMedia?.type === "video") {
       const vid = videoRefs.current[currentSlide];
@@ -173,14 +126,18 @@ export default function HeroCarousel({
         vid.play().catch(() => {});
       }
     }
-  }, [currentSlide, slides]);
+  }, [loading, homeData, currentSlide, slides]);
 
   const handlePrev = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    if (slides.length > 0) {
+      setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+    }
   };
 
   const handleNext = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
+    if (slides.length > 0) {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }
   };
 
   // Touch swipe support for mobile
@@ -208,52 +165,95 @@ export default function HeroCarousel({
     }
   };
 
+  // Loading Skeleton State to completely prevent static text / image flicker
+  if (loading || homeData === null) {
+    return (
+      <section className="relative overflow-hidden bg-[#072f2c] text-white">
+        <div className="relative w-full h-[380px] sm:h-[440px] md:h-[490px] lg:h-[530px] overflow-hidden flex items-center">
+          <div className="absolute inset-0 bg-[#072f2c] animate-pulse opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent lg:w-3/5" />
+          <div className="container-custom relative z-20 h-full flex flex-col justify-center py-6 sm:py-8">
+            <div className="max-w-2xl lg:max-w-3xl space-y-4">
+              <div className="h-6 w-48 rounded-full bg-white/10 animate-pulse" />
+              <div className="space-y-2 pt-1">
+                <div className="h-9 sm:h-12 w-4/5 rounded-xl bg-white/10 animate-pulse" />
+                <div className="h-9 sm:h-12 w-3/5 rounded-xl bg-white/10 animate-pulse" />
+              </div>
+              <div className="space-y-1.5 pt-2">
+                <div className="h-4 w-full max-w-xl rounded bg-white/10 animate-pulse" />
+                <div className="h-4 w-4/5 max-w-lg rounded bg-white/10 animate-pulse" />
+              </div>
+              <div className="flex gap-3 pt-3">
+                <div className="h-11 w-36 sm:w-44 rounded-xl bg-[#0b6e69]/40 animate-pulse" />
+                <div className="h-11 w-32 sm:w-40 rounded-xl bg-white/10 animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Purely dynamic texts from Firestore
+  const heroTitle =
+    homeData?.title?.trim() ||
+    (locationTitle ? `Precision Medical Equipment & Diagnostic Solutions in ${locationTitle}` : "");
+
+  const heroDescription = homeData?.description?.trim() || "";
+  const btn1Text = homeData?.button1Text?.trim() || "";
+  const btn2Text = homeData?.button2Text?.trim() || "";
+
+  // Static button routes
+  const btn1Href = makeLink("/items");
+  const btn2Href = makeLink("/contact");
+
   const activeMedia = slides[currentSlide] || slides[0];
 
   return (
     <section className="relative overflow-hidden bg-[#072f2c] text-white">
-      {/* Background Media Viewport with Full Brightness & High Image Visibility */}
+      {/* Background Media Viewport with Full Brightness & High Media Visibility */}
       <div
         className="relative w-full h-[380px] sm:h-[440px] md:h-[490px] lg:h-[530px] overflow-hidden"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentSlide}
-            initial={{ opacity: 0, scale: 1.02 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="absolute inset-0 w-full h-full"
-          >
-            {activeMedia?.type === "video" ? (
-              <video
-                ref={(el) => (videoRefs.current[currentSlide] = el)}
-                src={activeMedia.url}
-                className="w-full h-full object-cover object-center"
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
-              />
-            ) : (
-              <img
-                src={activeMedia?.url}
-                alt={`Hero Slide ${currentSlide + 1}`}
-                className="w-full h-full object-cover object-center brightness-[0.95] contrast-[1.05]"
-                onError={(e) => {
-                  e.target.src = FALLBACK_SLIDES[0].url;
-                }}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {slides.length > 0 ? (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentSlide}
+              initial={{ opacity: 0, scale: 1.02 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+              className="absolute inset-0 w-full h-full"
+            >
+              {activeMedia?.type === "video" ? (
+                <video
+                  ref={(el) => (videoRefs.current[currentSlide] = el)}
+                  src={activeMedia.url}
+                  className="w-full h-full object-cover object-center"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                />
+              ) : (
+                <img
+                  src={activeMedia?.url}
+                  alt={`Hero Slide ${currentSlide + 1}`}
+                  className="w-full h-full object-cover object-center brightness-[0.95] contrast-[1.05]"
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#072f2c] via-[#0b4d48] to-[#041e1c]" />
+        )}
 
         {/* Soft, Non-intrusive Gradient only on text side */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent lg:w-3/5" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-transparent lg:w-3/5" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
 
         {/* Foreground Content Container */}
@@ -274,51 +274,61 @@ export default function HeroCarousel({
               </span>
             </motion.div>
 
-            {/* Main Heading */}
-            <motion.h1
-              key={`title-${currentSlide}-${heroTitle}`}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="mt-3 sm:mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl md:text-4xl lg:text-5xl leading-[1.14] drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]"
-            >
-              {heroTitle}
-            </motion.h1>
-
-            {/* Description */}
-            <motion.p
-              key={`desc-${currentSlide}-${heroDescription}`}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="mt-2.5 sm:mt-3 text-xs sm:text-sm md:text-base leading-relaxed text-[#e6f4f2] max-w-2xl font-medium line-clamp-3 md:line-clamp-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]"
-            >
-              {heroDescription}
-            </motion.p>
-
-            {/* Action Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="mt-5 sm:mt-6 flex flex-wrap items-center gap-3"
-            >
-              <Link
-                href={btn1Href}
-                className="flex items-center justify-center gap-2 rounded-xl bg-[#0b6e69] !text-white px-6 py-3 text-xs sm:text-sm font-bold shadow-xl shadow-[#0b6e69]/40 transition-all duration-300 hover:bg-[#074e49] hover:shadow-2xl hover:-translate-y-0.5 border border-teal-400/30"
+            {/* Main Heading (Only Dynamic) */}
+            {heroTitle && (
+              <motion.h1
+                key={`title-${currentSlide}-${heroTitle}`}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="mt-3 sm:mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl md:text-4xl lg:text-5xl leading-[1.14] drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]"
               >
-                <span className="!text-white font-bold">{btn1Text}</span>
-                <ArrowRight size={16} className="!text-white" />
-              </Link>
+                {heroTitle}
+              </motion.h1>
+            )}
 
-              <Link
-                href={btn2Href}
-                className="flex items-center justify-center gap-2 rounded-xl border border-white/50 bg-black/60 !text-white px-6 py-3 text-xs sm:text-sm font-bold backdrop-blur-md shadow-md transition-all duration-300 hover:bg-white hover:!text-[#0b6e69] hover:border-white hover:-translate-y-0.5"
+            {/* Description (Only Dynamic) */}
+            {heroDescription && (
+              <motion.p
+                key={`desc-${currentSlide}-${heroDescription}`}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="mt-2.5 sm:mt-3 text-xs sm:text-sm md:text-base leading-relaxed text-[#e6f4f2] max-w-2xl font-medium line-clamp-3 md:line-clamp-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]"
               >
-                <PhoneCall size={16} className="text-[#14b8a6]" />
-                <span className="font-bold">{btn2Text}</span>
-              </Link>
-            </motion.div>
+                {heroDescription}
+              </motion.p>
+            )}
+
+            {/* Action Buttons (Only Dynamic Text with Static Links) */}
+            {(btn1Text || btn2Text) && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="mt-5 sm:mt-6 flex flex-wrap items-center gap-3"
+              >
+                {btn1Text && (
+                  <Link
+                    href={btn1Href}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-[#0b6e69] !text-white px-6 py-3 text-xs sm:text-sm font-bold shadow-xl shadow-[#0b6e69]/40 transition-all duration-300 hover:bg-[#074e49] hover:shadow-2xl hover:-translate-y-0.5 border border-teal-400/30"
+                  >
+                    <span className="!text-white font-bold">{btn1Text}</span>
+                    <ArrowRight size={16} className="!text-white" />
+                  </Link>
+                )}
+
+                {btn2Text && (
+                  <Link
+                    href={btn2Href}
+                    className="flex items-center justify-center gap-2 rounded-xl border border-white/50 bg-black/60 !text-white px-6 py-3 text-xs sm:text-sm font-bold backdrop-blur-md shadow-md transition-all duration-300 hover:bg-white hover:!text-[#0b6e69] hover:border-white hover:-translate-y-0.5"
+                  >
+                    <PhoneCall size={16} className="text-[#14b8a6]" />
+                    <span className="font-bold">{btn2Text}</span>
+                  </Link>
+                )}
+              </motion.div>
+            )}
 
             {/* Trust Badges */}
             <motion.div

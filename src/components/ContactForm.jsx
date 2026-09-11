@@ -58,7 +58,7 @@ export default function ContactForm({
         collection(
           db,
           "websitesQueries",
-          "clinidixcom",
+          "medflixbiomedicalcom",
           "contactQueries"
         ),
         {
